@@ -12,16 +12,9 @@ export class ImageGallery extends Component {
   state = {
     collection: [],
     status: 'idle',
-    page: 1,
   };
 
-  // shouldComponentUpdate(nextProps, nextState) {
-  //   const { page } = this.state;
-  //   if (page === nextState.page) {
-  //     console.log(nextState);
-  //     return false;
-  //   }
-  // }
+  static page = 1;
 
   async componentDidUpdate(prevProps, prevState) {
     if (
@@ -29,7 +22,7 @@ export class ImageGallery extends Component {
       this.state.page !== prevState.page
     ) {
       const { query } = this.props;
-      const { page } = this.state;
+
       this.setState({ status: 'pending' });
 
       if (query !== prevProps.query) {
@@ -37,7 +30,7 @@ export class ImageGallery extends Component {
       }
 
       try {
-        const response = await fetchImgs(query, page);
+        const response = await fetchImgs(query, this.page);
         const imgCollection = response.data.hits;
         this.setState(prevState => {
           return {
@@ -54,14 +47,22 @@ export class ImageGallery extends Component {
   }
 
   wipeCollection = () => {
+    this.page = 1;
     this.setState(() => {
-      return { collection: [], page: 1 };
+      return { collection: [] };
     });
   };
 
-  handlerPaginationButtonClick = () => {
+  handlerPaginationButtonClick = async () => {
+    const { query } = this.props;
+    this.page += 1;
+    const response = await fetchImgs(query, this.page);
+    const imgCollection = response.data.hits;
     this.setState(prevState => {
-      return { page: prevState.page + 1 };
+      return {
+        collection: [...prevState.collection, ...imgCollection],
+        status: 'idle',
+      };
     });
   };
 
@@ -85,6 +86,7 @@ export class ImageGallery extends Component {
                 key={item.id}
                 src={item.webformatURL}
                 alt={item.largeImageURL}
+                status={status}
               />
             ))}
           </ul>

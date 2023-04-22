@@ -4,7 +4,6 @@ import { SearchBar } from './Searchbar';
 import { Loader } from './Loader';
 import { ImageGalleryItem } from './ImageGalleryItem';
 import { Button } from './Button';
-import PropTypes from 'prop-types';
 
 import css from './ImageGallery.module.css';
 
@@ -66,7 +65,7 @@ export class ImageGallery extends Component {
                 <ImageGalleryItem
                   key={item.id}
                   src={item.webformatURL}
-                  alt={item.largeImageURL}
+                  largeVerion={item.largeImageURL}
                 />
               ))}
             </ul>
@@ -84,10 +83,3 @@ export class ImageGallery extends Component {
     );
   }
 }
-
-ImageGallery.propTypes = {
-  query: PropTypes.string,
-  key: PropTypes.number,
-  src: PropTypes.string,
-  alt: PropTypes.string,
-};

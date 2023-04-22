@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import css from './Searchbar.module.css';
+import PropTypes from 'prop-types';
 
 export class SearchBar extends Component {
   state = {
@@ -9,7 +10,7 @@ export class SearchBar extends Component {
   handlerInputChange = e => {
     this.setState({ input: e.target.value });
   };
-  
+
   sendQueryToApp = e => {
     e.preventDefault();
     const { getQuery } = this.props;
@@ -40,3 +41,7 @@ export class SearchBar extends Component {
     );
   }
 }
+
+SearchBar.propTypes = {
+  getQuery: PropTypes.func.isRequired,
+};

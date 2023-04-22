@@ -9,7 +9,7 @@ export class SearchBar extends Component {
   handlerInputChange = e => {
     this.setState({ input: e.target.value });
   };
-
+  
   sendQueryToApp = e => {
     e.preventDefault();
     const { getQuery } = this.props;

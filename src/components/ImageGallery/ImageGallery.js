@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { fetchImgs } from 'servises/api';
-
+import { SearchBar } from './Searchbar';
 import { Loader } from './Loader';
 import { ImageGalleryItem } from './ImageGalleryItem';
 import { Button } from './Button';
@@ -10,6 +10,7 @@ import css from './ImageGallery.module.css';
 
 export class ImageGallery extends Component {
   state = {
+    query: '',
     collection: [],
     isLoading: false,
     error: false,
@@ -18,19 +19,14 @@ export class ImageGallery extends Component {
 
   async componentDidUpdate(prevProps, prevState) {
     if (
-      this.props.query !== prevProps.query ||
+      this.state.query !== prevState.query ||
       this.state.page !== prevState.page
     ) {
-      const { query } = this.props;
-
       this.setState({ isLoading: true });
 
-      if (query !== prevProps.query) {
-        this.wipeCollection();
-      }
       try {
-        const { query } = this.props;
-        const response = await fetchImgs(query, this.state.page);
+        const { query, page } = this.state;
+        const response = await fetchImgs(query, page);
         const imgCollection = response.data.hits;
         this.setState(prevState => {
           return {
@@ -46,10 +42,8 @@ export class ImageGallery extends Component {
     }
   }
 
-  wipeCollection = () => {
-    this.setState(() => {
-      return { collection: [], page: 1 };
-    });
+  handlerInputChange = input => {
+    this.setState({ query: input, collection: [], isLoading: false, page: 1 });
   };
 
   handlerPaginationButtonClick = () => {
@@ -61,6 +55,7 @@ export class ImageGallery extends Component {
     console.log(isLoading);
     return (
       <>
+        <SearchBar getQuery={this.handlerInputChange} />
         {error && <p>Что-то не так, попробуйте ещё раз...</p>}
         {isLoading && <Loader />}
 
@@ -89,6 +84,7 @@ export class ImageGallery extends Component {
     );
   }
 }
+
 ImageGallery.propTypes = {
   query: PropTypes.string,
   key: PropTypes.number,

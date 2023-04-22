@@ -4,8 +4,9 @@ import { fetchImgs } from 'servises/api';
 import { Loader } from './Loader';
 import { ImageGalleryItem } from './ImageGalleryItem';
 import { Button } from './Button';
-
 import PropTypes from 'prop-types';
+
+import css from './ImageGallery.module.css';
 
 export class ImageGallery extends Component {
   state = {
@@ -14,6 +15,14 @@ export class ImageGallery extends Component {
     page: 1,
   };
 
+  // shouldComponentUpdate(nextProps, nextState) {
+  //   const { page } = this.state;
+  //   if (page === nextState.page) {
+  //     console.log(nextState);
+  //     return false;
+  //   }
+  // }
+
   async componentDidUpdate(prevProps, prevState) {
     if (
       this.props.query !== prevProps.query ||
@@ -21,8 +30,12 @@ export class ImageGallery extends Component {
     ) {
       const { query } = this.props;
       const { page } = this.state;
-
       this.setState({ status: 'pending' });
+
+      if (query !== prevProps.query) {
+        this.wipeCollection();
+      }
+
       try {
         const response = await fetchImgs(query, page);
         const imgCollection = response.data.hits;
@@ -40,9 +53,14 @@ export class ImageGallery extends Component {
     }
   }
 
+  wipeCollection = () => {
+    this.setState(() => {
+      return { collection: [], page: 1 };
+    });
+  };
+
   handlerPaginationButtonClick = () => {
     this.setState(prevState => {
-      console.log(prevState.page);
       return { page: prevState.page + 1 };
     });
   };
@@ -58,10 +76,10 @@ export class ImageGallery extends Component {
       return <p>Что-то не так, попробуйте ещё раз...</p>;
     }
 
-    if (collection && status === 'idle')
+    if (collection.length > 0 && status === 'idle')
       return (
         <>
-          <ul className="gallery">
+          <ul className={css.ImageGallery}>
             {collection.map(item => (
               <ImageGalleryItem
                 key={item.id}
@@ -70,9 +88,8 @@ export class ImageGallery extends Component {
               />
             ))}
           </ul>
-          <div>
-            <Button onClick={this.handlerPaginationButtonClick} />
-          </div>
+
+          <Button onClick={this.handlerPaginationButtonClick} />
         </>
       );
   }

@@ -11,37 +11,27 @@ import css from './ImageGallery.module.css';
 export class ImageGallery extends Component {
   state = {
     collection: [],
-    status: 'idle',
+    isLoading: false,
+    error: false,
   };
 
   static page = 1;
 
   async componentDidUpdate(prevProps, prevState) {
-    if (
-      this.props.query !== prevProps.query ||
-      this.state.page !== prevState.page
-    ) {
+    if (this.props.query !== prevProps.query) {
       const { query } = this.props;
 
-      this.setState({ status: 'pending' });
+      this.setState({ isLoading: true });
 
       if (query !== prevProps.query) {
         this.wipeCollection();
       }
-
       try {
-        const response = await fetchImgs(query, this.page);
-        const imgCollection = response.data.hits;
-        this.setState(prevState => {
-          return {
-            collection: [...prevState.collection, ...imgCollection],
-            status: 'idle',
-          };
-        });
+        await this.handlerFetchImgs();
       } catch (error) {
-        this.setState({ status: 'rejected' });
+        this.setState({ error: true });
       } finally {
-        this.setState({ status: 'idle' });
+        this.setState({ isLoading: false });
       }
     }
   }
@@ -53,31 +43,35 @@ export class ImageGallery extends Component {
     });
   };
 
-  handlerPaginationButtonClick = async () => {
+  handlerFetchImgs = async () => {
     const { query } = this.props;
-    this.page += 1;
     const response = await fetchImgs(query, this.page);
     const imgCollection = response.data.hits;
     this.setState(prevState => {
       return {
         collection: [...prevState.collection, ...imgCollection],
-        status: 'idle',
+        isLoading: false,
       };
     });
   };
 
-  render() {
-    const { collection, status } = this.state;
+  handlerPaginationButtonClick = () => {
+    this.page += 1;
+    this.handlerFetchImgs();
+  };
 
-    if (status === 'pending') {
+  render() {
+    const { collection, isLoading, error } = this.state;
+
+    if (isLoading === true) {
       return <Loader />;
     }
 
-    if (status === 'rejected') {
+    if (error === true) {
       return <p>Что-то не так, попробуйте ещё раз...</p>;
     }
 
-    if (collection.length > 0 && status === 'idle')
+    if (collection.length > 0 && isLoading === false)
       return (
         <>
           <ul className={css.ImageGallery}>
@@ -86,11 +80,9 @@ export class ImageGallery extends Component {
                 key={item.id}
                 src={item.webformatURL}
                 alt={item.largeImageURL}
-                status={status}
               />
             ))}
           </ul>
-
           <Button onClick={this.handlerPaginationButtonClick} />
         </>
       );

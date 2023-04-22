@@ -13,12 +13,14 @@ export class ImageGallery extends Component {
     collection: [],
     isLoading: false,
     error: false,
+    page: 1,
   };
 
-  static page = 1;
-
   async componentDidUpdate(prevProps, prevState) {
-    if (this.props.query !== prevProps.query) {
+    if (
+      this.props.query !== prevProps.query ||
+      this.state.page !== prevState.page
+    ) {
       const { query } = this.props;
 
       this.setState({ isLoading: true });
@@ -27,7 +29,15 @@ export class ImageGallery extends Component {
         this.wipeCollection();
       }
       try {
-        await this.handlerFetchImgs();
+        const { query } = this.props;
+        const response = await fetchImgs(query, this.state.page);
+        const imgCollection = response.data.hits;
+        this.setState(prevState => {
+          return {
+            collection: [...prevState.collection, ...imgCollection],
+            isLoading: false,
+          };
+        });
       } catch (error) {
         this.setState({ error: true });
       } finally {
@@ -37,58 +47,48 @@ export class ImageGallery extends Component {
   }
 
   wipeCollection = () => {
-    this.page = 1;
     this.setState(() => {
-      return { collection: [] };
-    });
-  };
-
-  handlerFetchImgs = async () => {
-    const { query } = this.props;
-    const response = await fetchImgs(query, this.page);
-    const imgCollection = response.data.hits;
-    this.setState(prevState => {
-      return {
-        collection: [...prevState.collection, ...imgCollection],
-        isLoading: false,
-      };
+      return { collection: [], page: 1 };
     });
   };
 
   handlerPaginationButtonClick = () => {
-    this.page += 1;
-    this.handlerFetchImgs();
+    this.setState(prevState => ({ page: prevState.page + 1 }));
   };
 
   render() {
     const { collection, isLoading, error } = this.state;
+    console.log(isLoading);
+    return (
+      <>
+        {error && <p>Что-то не так, попробуйте ещё раз...</p>}
+        {isLoading && <Loader />}
 
-    if (isLoading === true) {
-      return <Loader />;
-    }
-
-    if (error === true) {
-      return <p>Что-то не так, попробуйте ещё раз...</p>;
-    }
-
-    if (collection.length > 0 && isLoading === false)
-      return (
-        <>
-          <ul className={css.ImageGallery}>
-            {collection.map(item => (
-              <ImageGalleryItem
-                key={item.id}
-                src={item.webformatURL}
-                alt={item.largeImageURL}
+        {collection.length > 0 && (
+          <>
+            <ul className={css.ImageGallery}>
+              {collection.map(item => (
+                <ImageGalleryItem
+                  key={item.id}
+                  src={item.webformatURL}
+                  alt={item.largeImageURL}
+                />
+              ))}
+            </ul>
+            {isLoading ? (
+              <Loader />
+            ) : (
+              <Button
+                disabled={isLoading}
+                onClick={this.handlerPaginationButtonClick}
               />
-            ))}
-          </ul>
-          <Button onClick={this.handlerPaginationButtonClick} />
-        </>
-      );
+            )}
+          </>
+        )}
+      </>
+    );
   }
 }
-
 ImageGallery.propTypes = {
   query: PropTypes.string,
   key: PropTypes.number,

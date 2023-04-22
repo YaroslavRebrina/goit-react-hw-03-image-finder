@@ -14,7 +14,7 @@ export class SearchBar extends Component {
     e.preventDefault();
     const { getQuery } = this.props;
     const { input } = this.state;
-
+    this.setState({ input: null });
     getQuery(input);
   };
 
@@ -25,7 +25,6 @@ export class SearchBar extends Component {
           <button type="submit" className={css.SearchFormButton}>
             <span className="button-label">Search</span>
           </button>
-
 
           <input
             name="query"

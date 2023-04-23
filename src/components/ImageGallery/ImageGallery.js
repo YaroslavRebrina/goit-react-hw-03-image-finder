@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { fetchImgs } from 'servises/api';
+import { fetchImgs, per_page } from 'servises/api';
 import { SearchBar } from './Searchbar';
 import { Loader } from './Loader';
 import { ImageGalleryItem } from './ImageGalleryItem';
@@ -14,6 +14,7 @@ export class ImageGallery extends Component {
     isLoading: false,
     error: false,
     page: 1,
+    isShowButton: false,
   };
 
   async componentDidUpdate(prevProps, prevState) {
@@ -27,10 +28,12 @@ export class ImageGallery extends Component {
         const { query, page } = this.state;
         const response = await fetchImgs(query, page);
         const imgCollection = response.data.hits;
+        console.log(response);
         this.setState(prevState => {
           return {
             collection: [...prevState.collection, ...imgCollection],
             isLoading: false,
+            isShowButton: page < Math.ceil(response.data.totalHits / per_page),
           };
         });
       } catch (error) {
@@ -50,8 +53,8 @@ export class ImageGallery extends Component {
   };
 
   render() {
-    const { collection, isLoading, error } = this.state;
-    console.log(isLoading);
+    const { collection, isLoading, error, isShowButton } = this.state;
+
     return (
       <>
         <SearchBar getQuery={this.handlerInputChange} />
@@ -72,10 +75,12 @@ export class ImageGallery extends Component {
             {isLoading ? (
               <Loader />
             ) : (
-              <Button
-                disabled={isLoading}
-                onClick={this.handlerPaginationButtonClick}
-              />
+              isShowButton && (
+                <Button
+                  disabled={isLoading}
+                  onClick={this.handlerPaginationButtonClick}
+                />
+              )
             )}
           </>
         )}
